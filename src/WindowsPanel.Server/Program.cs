@@ -2,6 +2,9 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Hosting.WindowsServices;
+using System.Diagnostics;
+using System.Drawing;
+using System.Windows.Forms;
 using WindowsPanel.Core;
 using WindowsPanel.Core.Aggregation;
 using WindowsPanel.Core.Collectors;
@@ -68,21 +71,86 @@ ApiEndpoints.Map(app);
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
-// 双击 exe 运行时自动打开浏览器（作为 Windows 服务运行时不弹窗）
-if (!WindowsServiceHelpers.IsWindowsService() && Environment.UserInteractive)
+static void OpenBrowser(string url)
 {
-    app.Lifetime.ApplicationStarted.Register(() =>
+    try
     {
-        try
-        {
-            using var _ = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-            {
-                FileName = panelOpts.Url,
-                UseShellExecute = true
-            });
-        }
-        catch { /* 忽略打开浏览器失败 */ }
-    });
+        using var _ = Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
+    }
+    catch { /* 忽略打开浏览器失败 */ }
 }
 
-app.Run();
+// 本机浏览器打开用的地址（0.0.0.0 不可浏览，需换成 127.0.0.1）
+static string LocalUrl(string url) => url.Replace("0.0.0.0", "127.0.0.1");
+
+// 局域网内其他电脑访问用的地址（取首个内网 IPv4）
+static string? LanUrl(int port)
+{
+    try
+    {
+        var lan = System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces()
+            .Where(n => n.OperationalStatus == System.Net.NetworkInformation.OperationalStatus.Up
+                     && n.NetworkInterfaceType != System.Net.NetworkInformation.NetworkInterfaceType.Loopback)
+            .SelectMany(n => n.GetIPProperties().UnicastAddresses)
+            .Select(a => a.Address)
+            .FirstOrDefault(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork
+                               && !a.ToString().StartsWith("169.254."));
+        return lan is null ? null : $"http://{lan}:{port}";
+    }
+    catch { return null; }
+}
+
+bool desktopMode = !WindowsServiceHelpers.IsWindowsService()
+    && Environment.UserInteractive
+    && OperatingSystem.IsWindows();
+
+if (desktopMode)
+{
+    // 桌面模式：无控制台窗口，服务器后台运行，托盘图标常驻
+    var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
+    var browseUrl = LocalUrl(panelOpts.Url);
+    var port = new Uri(panelOpts.Url).Port;
+    var lanUrl = LanUrl(port);
+    app.Lifetime.ApplicationStarted.Register(() => OpenBrowser(browseUrl));
+
+    var hostTask = Task.Run(() => app.Run());
+
+    using var iconStream = typeof(Program).Assembly
+        .GetManifestResourceStream("WindowsPanel.Server.Assets.app.ico");
+    using var icon = iconStream is not null ? new Icon(iconStream) : SystemIcons.Application;
+
+    using var menu = new ContextMenuStrip();
+    var openItem = new ToolStripMenuItem($"打开面板 ({browseUrl})");
+    var lanItem = lanUrl is not null
+        ? new ToolStripMenuItem($"局域网访问: {lanUrl}") { Enabled = false }
+        : null;
+    var exitItem = new ToolStripMenuItem("退出");
+    openItem.Click += (_, _) => OpenBrowser(browseUrl);
+    exitItem.Click += (_, _) =>
+    {
+        lifetime.StopApplication();   // 优雅停止服务器（数据落盘）
+        Application.ExitThread();     // 结束托盘消息循环
+    };
+    menu.Items.AddRange(lanItem is not null
+        ? new ToolStripItem[] { openItem, lanItem, new ToolStripSeparator(), exitItem }
+        : new ToolStripItem[] { openItem, new ToolStripSeparator(), exitItem });
+
+    using var tray = new NotifyIcon
+    {
+        Icon = icon,
+        Text = "WindowsPanel — 运行中",
+        ContextMenuStrip = menu,
+        Visible = true
+    };
+    tray.DoubleClick += (_, _) => OpenBrowser(browseUrl);
+
+    Application.SetHighDpiMode(HighDpiMode.SystemAware);
+    Application.Run(); // 托盘消息循环（阻塞至点击"退出"）
+
+    try { hostTask.GetAwaiter().GetResult(); } catch { /* 已请求停止 */ }
+}
+else
+{
+    // Windows 服务 / 非交互模式：保持原有控制台行为
+    app.Run();
+}

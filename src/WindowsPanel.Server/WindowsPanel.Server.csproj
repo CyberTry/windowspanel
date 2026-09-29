@@ -12,7 +12,13 @@
     <Product>WindowsPanel</Product>
     <Description>Windows 系统监控面板</Description>
     <InvariantGlobalization>true</InvariantGlobalization>
+    <OutputType>WinExe</OutputType>
+    <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\app.ico" />
+  </ItemGroup>
 
   <!-- 单文件发布配置（dotnet publish -c Release 时生效） -->
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">

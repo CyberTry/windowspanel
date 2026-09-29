@@ -312,8 +312,11 @@ powershell -ExecutionPolicy Bypass -File publish.ps1
 - `dist\WindowsPanel\WindowsPanel.exe`（约 47MB，内嵌前端，目标机**无需安装 .NET 运行时**）
 - `dist\WindowsPanel-win-x64.zip`（可直接分发）
 
-使用方式：双击 `WindowsPanel.exe` 即启动并自动打开浏览器 `http://127.0.0.1:9721`；
-首次运行会在 exe 同目录创建 `data\panel.db` 存储历史数据。
+使用方式：双击 `WindowsPanel.exe` — 无控制台窗口，程序常驻系统托盘（仪表盘图标）：
+- 启动时自动打开浏览器 `http://127.0.0.1:9721`
+- **双击托盘图标**：再次打开面板
+- **右键托盘图标 → 退出**：优雅停止程序（数据已实时落盘）
+- 数据存储在 exe 同目录的 `data\panel.db`；作为 Windows 服务运行时无托盘，保持控制台行为
 
 ### 7.3 配置文件 `appsettings.json`
 
