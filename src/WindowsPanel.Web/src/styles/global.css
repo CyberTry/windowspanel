@@ -48,6 +48,12 @@ body {
   height: 100vh;
 }
 
+/* 显式 grid 定位，避免 Vue fragment / 自动布局错位 */
+#app > header { grid-column: 1 / 3; grid-row: 1; }
+#app > nav    { grid-column: 1;     grid-row: 2; }
+#app > main   { grid-column: 2;     grid-row: 2; }
+#app > footer { grid-column: 1 / 3; grid-row: 3; }
+
 header {
   display: flex;
   align-items: center;
@@ -56,7 +62,13 @@ header {
   background: var(--bg2);
   border-bottom: 1px solid var(--line);
   position: relative;
-  grid-column: 1 / 3;
+}
+header::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: repeating-linear-gradient(-45deg, var(--yellow) 0 10px, #000 10px 20px);
 }
 header::after {
   content: "";

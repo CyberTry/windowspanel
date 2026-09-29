@@ -23,7 +23,6 @@ const wsLabel = computed(() => panel.wsStatus === 'open' ? 'WS LIVE' : 'WS OFF')
 </script>
 
 <template>
-  <div class="hazard" />
   <header>
     <div class="logo">WP</div>
     <div class="page-title">

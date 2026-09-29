@@ -13,8 +13,8 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/api': 'http://127.0.0.1:9720',
-      '/ws':  { target: 'ws://127.0.0.1:9720', ws: true }
+      '/api': 'http://127.0.0.1:9721',
+      '/ws':  { target: 'ws://127.0.0.1:9721', ws: true }
     }
   },
   build: {

@@ -26,7 +26,6 @@ public sealed class RetentionService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken ct)
     {
-        await TickAsync(ct);
         while (!ct.IsCancellationRequested)
         {
             try { await TickAsync(ct); }
@@ -44,13 +43,13 @@ public sealed class RetentionService : BackgroundService
         await using var conn = new SqliteConnection($"Data Source={dbPath};");
         await conn.OpenAsync(ct);
 
-        // 聚合上一分钟 raw → 1m
+        // 聚合上一分钟 raw → 1m（源列名 value）
         var lastMinTs = (nowMs / oneMinBucketMs - 1) * oneMinBucketMs;
-        await AggregateAsync(conn, "metric_raw", "metric_1m", "metric", lastMinTs, oneMinBucketMs, ct);
+        await AggregateAsync(conn, "metric_raw", "metric_1m", "metric", "value", lastMinTs, oneMinBucketMs, ct);
 
-        // 聚合上一小时 1m → 1h
+        // 聚合上一小时 1m → 1h（源列名 avg_v）
         var lastHourTs = (nowMs / oneHourBucketMs - 1) * oneHourBucketMs;
-        await AggregateAsync(conn, "metric_1m", "metric_1h", "metric", lastHourTs, oneHourBucketMs, ct);
+        await AggregateAsync(conn, "metric_1m", "metric_1h", "metric", "avg_v", lastHourTs, oneHourBucketMs, ct);
 
         // 清理过期点
         await DeleteBeforeAsync(conn, "metric_raw", nowMs - (long)rawRetention.TotalMilliseconds,        ct);
@@ -58,13 +57,13 @@ public sealed class RetentionService : BackgroundService
         await DeleteBeforeAsync(conn, "metric_1h",  nowMs - (long)oneHourRetention.TotalMilliseconds,    ct);
     }
 
-    private static async Task AggregateAsync(SqliteConnection conn, string src, string dst, string keyCol, long bucketStart, long bucketSize, CancellationToken ct)
+    private static async Task AggregateAsync(SqliteConnection conn, string src, string dst, string keyCol, string srcCol, long bucketStart, long bucketSize, CancellationToken ct)
     {
         var bucketEnd = bucketStart + bucketSize;
         await using var cmd = conn.CreateCommand();
         cmd.CommandText = $"""
             INSERT OR REPLACE INTO {dst} ({keyCol}, ts, avg_v, max_v, min_v)
-            SELECT {keyCol}, $bucket AS ts, AVG(value), MAX(value), MIN(value)
+            SELECT {keyCol}, $bucket AS ts, AVG({srcCol}), MAX({srcCol}), MIN({srcCol})
             FROM {src}
             WHERE ts >= $start AND ts < $end
             GROUP BY {keyCol}

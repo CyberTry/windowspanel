@@ -13,10 +13,10 @@ const props = withDefaults(defineProps<{
   ringKey: 'cpuRing' | 'memRing' | 'gpuRing' | 'rxRing' | 'txRing';
   /** sparkline 数值映射（KB/s 或 %） */
   ringScale?: number;
-  sub: string;
+  sub?: string;
   cyan?: boolean;
   decimals?: number;
-}>(), { cyan: false, decimals: 1, ringScale: 1 });
+}>(), { cyan: false, decimals: 1, ringScale: 1, sub: '' });
 
 const panel = usePanelStore();
 

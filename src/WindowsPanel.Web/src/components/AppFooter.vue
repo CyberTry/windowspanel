@@ -1,6 +1,17 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue';
+import { api } from '@/api/client';
 import { usePanelStore } from '@/stores/panel';
 const panel = usePanelStore();
+const hostLabel = ref('');
+onMounted(async () => {
+  try {
+    const s = await api.settings();
+    hostLabel.value = (s.url || '').replace(/^https?:\/\//, '');
+  } catch {
+    hostLabel.value = window.location.host;
+  }
+});
 </script>
 
 <template>
@@ -11,7 +22,7 @@ const panel = usePanelStore();
     <div class="seg">READY</div>
     <div class="right">
       <div class="seg">{{ panel.summary?.hardware.os ?? 'WIN' }}</div>
-      <div class="seg">127.0.0.1:9720</div>
+      <div class="seg">{{ hostLabel || '…' }}</div>
     </div>
   </footer>
 </template>

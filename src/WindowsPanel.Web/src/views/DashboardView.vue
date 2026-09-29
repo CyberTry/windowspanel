@@ -42,7 +42,7 @@ function buildMainOption() {
           params.map(p => `<span style="color:${p.color}">●</span> ${p.seriesName} <b>${(+p.value[1]).toFixed(1)}%</b>`).join('<br>');
       }
     },
-    xAxis: { type: 'value', ...axis(), min: -300, max: 0 },
+    xAxis: { type: 'value', ...axis(), min: -Math.max(60, panel.cpuRing.length), max: 0 },
     yAxis: { type: 'value', ...axis(), min: 0, max: 100, axisLabel: { ...axis().axisLabel, formatter: '{value}%' } },
     series: [
       line('CPU', panel.cpuRing, orange, xs),
@@ -57,7 +57,7 @@ function buildNetOption() {
   return {
     grid: { left: 50, right: 16, top: 10, bottom: 22 },
     tooltip: { trigger: 'axis', backgroundColor: 'rgba(0,0,0,.92)', borderColor: yellow, textStyle: { color: yellow, fontSize: 11 } },
-    xAxis: { type: 'value', ...axis(), min: -300, max: 0 },
+    xAxis: { type: 'value', ...axis(), min: -Math.max(60, panel.rxRing.length), max: 0 },
     yAxis: { type: 'value', ...axis(), axisLabel: { ...axis().axisLabel, formatter: (v: number) => `${v.toFixed(0)} KB` } },
     series: [
       line('RX ↓', panel.rxRing.map(v => v / 1024), cyan,   xs),
@@ -105,8 +105,8 @@ const memFmt = (b: number) => b ? `${(b / (1 << 30)).toFixed(1)} GB` : 'n/a';
       <MetricCard title="内存占用"   tag="MEMORY" unit="%"    source="mem"  ringKey="memRing" sub="15.0 GB / 32.0 GB" />
       <MetricCard title="GPU 使用率" tag="GPU"    unit="%"    source="gpu"  ringKey="gpuRing" sub="RTX 3060 · ENGINE SUM" />
       <MetricCard title="显存占用"   tag="VRAM"   unit="%"    source="vram" ringKey="gpuRing" sub="3.8 GB / 12.0 GB" />
-      <MetricCard title="上行速率"   tag="TX"     unit="KB/s" source="tx"   ringKey="txRing"  cyan />
-      <MetricCard title="下行速率"   tag="RX"     unit="KB/s" source="rx"   ringKey="rxRing"  cyan />
+      <MetricCard title="上行速率"   tag="TX"     unit="KB/s" source="tx"   ringKey="txRing"  cyan sub="TOTAL UPLOAD" />
+      <MetricCard title="下行速率"   tag="RX"     unit="KB/s" source="rx"   ringKey="rxRing"  cyan sub="TOTAL DOWNLOAD" />
     </div>
 
     <div class="dash-grid">
@@ -195,7 +195,7 @@ const memFmt = (b: number) => b ? `${(b / (1 << 30)).toFixed(1)} GB` : 'n/a';
 .gauge .g-label { font-size: 9px; color: var(--txt-dim); letter-spacing: 2px; }
 
 .kv { width: 100%; border-collapse: collapse; font-size: 11px; }
-.kv td { padding: 6px 4px; border-bottom: 1px dashed var(--line); }
+.kv td { padding: 6px 4px; border-bottom: 1px dashed var(--line); white-space: nowrap; }
 .kv tr:last-child td { border-bottom: none; }
 .kv td:first-child { color: var(--txt-dim); }
 .kv td:last-child { text-align: right; font-family: Consolas, monospace; color: var(--txt); }
