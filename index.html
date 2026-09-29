@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WinPanel · Windows 服务器管理面板（静态演示）</title>
+<style>
+  :root{
+    --orange:#FF5F00;   /* 高饱和橙 */
+    --yellow:#FFC300;   /* 高饱和黄 */
+    --blue:#0B5CFF;     /* 高饱和蓝 */
+    --blue-soft:#3E8BFF;
+    --ok:#00C271;
+    --danger:#FF3B30;
+    --bg:#F3F4F6;
+    --card:#FFFFFF;
+    --line:#E6E8EC;
+    --ink:#12141A;
+    --ink-2:#5B6172;
+    --ink-3:#9AA1B2;
+    --radius:16px;
+    --shadow:0 1px 2px rgba(16,24,40,.05), 0 10px 28px rgba(16,24,40,.07);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:"Segoe UI","Segoe UI Variable",Inter,system-ui,-apple-system,"PingFang SC","Microsoft YaHei UI","Microsoft YaHei",sans-serif;
+    color:var(--ink);
+    background-color:var(--bg);
+    /* 浅灰白底 + 细密点状肌理（点阵网格） */
+    background-image:radial-gradient(rgba(18,20,26,.055) 1px, transparent 1px);
+    background-size:16px 16px;
+    -webkit-font-smoothing:antialiased;
+    font-variant-numeric:tabular-nums;
+  }
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:1440px;margin:0 auto;padding:22px 24px 48px}
+
+  /* ============ Header ============ */
+  header.top{
+    display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:14px 18px;position:sticky;top:12px;z-index:50;
+  }
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{
+    width:40px;height:40px;border-radius:12px;
+    background:linear-gradient(135deg,var(--orange),var(--yellow) 45%,var(--blue));
+    display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px;letter-spacing:.5px;
+    box-shadow:0 6px 16px rgba(255,95,0,.28);
+  }
+  .brand h1{font-size:17px;font-weight:700;letter-spacing:.2px}
+  .brand .sub{font-size:11.5px;color:var(--ink-3);margin-top:2px}
+  nav.tabs{display:flex;gap:4px;background:#F1F2F5;border:1px solid var(--line);padding:4px;border-radius:12px}
+  nav.tabs a{font-size:13px;color:var(--ink-2);padding:7px 14px;border-radius:9px;transition:.15s;font-weight:600}
+  nav.tabs a:hover{color:var(--ink);background:#fff}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+  .chip{
+    font-size:11.5px;color:var(--ink-2);background:#F7F8FA;border:1px solid var(--line);
+    padding:5px 10px;border-radius:999px;white-space:nowrap;
+  }
+  .chip b{color:var(--ink);font-weight:600}
+  .live{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--ink-2);font-weight:600}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 0 rgba(0,194,113,.5);animation:pulse 1.8s infinite}
+  @keyframes pulse{70%{box-shadow:0 0 0 8px rgba(0,194,113,0)}100%{box-shadow:0 0 0 0 rgba(0,194,113,0)}}
+
+  /* ============ Cards ============ */
+  section{margin-top:20px}
+  .grid-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .grid-2{display:grid;grid-template-columns:2.1fr 1fr;gap:16px}
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:18px;position:relative;overflow:hidden;
+  }
+  .card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+  .card-title{font-size:13.5px;font-weight:700;letter-spacing:.3px;display:flex;align-items:center;gap:8px}
+  .swatch{width:9px;height:9px;border-radius:3px}
+  .card-sub{font-size:11.5px;color:var(--ink-3)}
+  .pill{font-size:11px;padding:4px 9px;border-radius:999px;background:#F1F2F5;color:var(--ink-2);border:1px solid var(--line);font-weight:600}
+
+  /* 环形图 */
+  .ring-wrap{position:relative;width:150px;height:150px;margin:10px auto 4px}
+  .ring{width:150px;height:150px;transform:rotate(-90deg)}
+  .ring circle{fill:none;stroke-width:12;stroke-linecap:round}
+  .ring .bg{stroke:#EEF0F4}
+  .ring .fg{transition:stroke-dasharray .8s cubic-bezier(.4,0,.2,1)}
+  .ring-center{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+  .ring-value{font-size:30px;font-weight:800;letter-spacing:-1px}
+  .ring-value small{font-size:14px;font-weight:700;color:var(--ink-3);margin-left:1px}
+  .ring-sub{font-size:11px;color:var(--ink-3);margin-top:2px}
+  .metric-foot{display:flex;justify-content:space-between;border-top:1px dashed var(--line);margin-top:10px;padding-top:10px}
+  .metric-foot div{text-align:center;flex:1}
+  .metric-foot .k{font-size:10.5px;color:var(--ink-3)}
+  .metric-foot .v{font-size:13px;font-weight:700;margin-top:3px}
+
+  /* 网络卡 */
+  .net-nums{display:flex;gap:26px;flex-wrap:wrap}
+  .net-num .k{font-size:11.5px;color:var(--ink-3);display:flex;align-items:center;gap:6px}
+  .net-num .v{font-size:26px;font-weight:800;letter-spacing:-.5px;margin-top:2px}
+  .net-num .v span{font-size:13px;color:var(--ink-3);font-weight:700;margin-left:3px}
+  .net-canvas-box{position:relative;height:170px;margin-top:8px}
+  canvas{display:block;width:100%;height:100%}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  .lg{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink-2);cursor:pointer;user-select:none;font-weight:600}
+  .lg i{width:14px;height:4px;border-radius:2px;display:inline-block}
+  .lg.off{opacity:.35;text-decoration:line-through}
+
+  /* 表格（任务管理器风格） */
+  table{width:100%;border-collapse:collapse;font-size:12.8px}
+  thead th{
+    text-align:left;font-size:11px;color:var(--ink-3);font-weight:700;letter-spacing:.6px;
+    padding:8px 10px;border-bottom:1px solid var(--line);text-transform:uppercase;position:sticky;top:0;background:#fff;
+  }
+  thead th.num,tbody td.num{text-align:right}
+  tbody td{padding:9px 10px;border-bottom:1px solid #F1F2F5;vertical-align:middle}
+  tbody tr:hover{background:#FAFBFC}
+  tbody tr:last-child td{border-bottom:none}
+  .app{display:flex;align-items:center;gap:10px}
+  .app-ico{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;color:#fff;font-size:11px;font-weight:800;flex:none}
+  .app .nm{font-weight:600}
+  .app .pth{font-size:10.5px;color:var(--ink-3)}
+  .status{font-size:11px;padding:3px 8px;border-radius:6px;font-weight:700}
+  .st-run{background:rgba(0,194,113,.12);color:#00915A}
+  .st-sus{background:rgba(255,195,0,.16);color:#A97500}
+  .st-imp{background:rgba(255,95,0,.12);color:#CC4E00}
+  .bar-cell{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+  .bar{flex:1;max-width:90px;height:6px;border-radius:99px;background:#EEF0F4;overflow:hidden;min-width:44px}
+  .bar i{display:block;height:100%;border-radius:99px;transition:width .7s ease}
+  .b-blue{background:var(--blue)} .b-yellow{background:var(--yellow)} .b-orange{background:var(--orange)}
+  .mono{font-variant-numeric:tabular-nums}
+  .table-scroll{max-height:360px;overflow:auto;margin:6px -6px 0}
+  .table-scroll::-webkit-scrollbar{width:8px;height:8px}
+  .table-scroll::-webkit-scrollbar-thumb{background:#DDE1E8;border-radius:8px}
+
+  /* 日志 */
+  .log-list{display:flex;flex-direction:column;gap:2px;max-height:360px;overflow:auto;margin-top:6px}
+  .log-item{display:flex;gap:10px;padding:9px 8px;border-radius:10px;transition:.15s}
+  .log-item:hover{background:#F7F8FA}
+  .log-time{font-size:11px;color:var(--ink-3);white-space:nowrap;padding-top:2px;width:64px;flex:none}
+  .log-body{flex:1}
+  .log-msg{font-size:12.3px;line-height:1.5}
+  .log-tag{font-size:10px;font-weight:800;padding:2px 6px;border-radius:5px;margin-right:6px;letter-spacing:.4px}
+  .t-info{background:rgba(11,92,255,.1);color:var(--blue)}
+  .t-warn{background:rgba(255,195,0,.18);color:#A97500}
+  .t-crit{background:rgba(255,59,48,.12);color:var(--danger)}
+  .t-ok{background:rgba(0,194,113,.13);color:#00915A}
+
+  /* 历史曲线 */
+  .range-tabs{display:flex;gap:6px}
+  .rt{
+    font-size:12px;font-weight:700;padding:6px 14px;border-radius:9px;cursor:pointer;
+    background:#F1F2F5;border:1px solid var(--line);color:var(--ink-2);transition:.15s;
+  }
+  .rt:hover{background:#fff;color:var(--ink)}
+  .rt.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .hist-box{position:relative;height:300px;margin-top:12px}
+  .tooltip{
+    position:absolute;pointer-events:none;background:rgba(18,20,26,.94);color:#fff;
+    font-size:11.5px;padding:8px 10px;border-radius:9px;opacity:0;transition:opacity .12s;
+    transform:translate(-50%,-115%);white-space:nowrap;z-index:5;line-height:1.7;
+  }
+  .tooltip .tt-t{font-weight:800;margin-bottom:2px;color:#C9CEDA}
+  .tooltip i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}
+
+  .foot{margin-top:18px;text-align:center;font-size:11.5px;color:var(--ink-3)}
+
+  @media (max-width:1080px){
+    .grid-metrics{grid-template-columns:repeat(2,1fr)}
+    .grid-2{grid-template-columns:1fr}
+    nav.tabs,.chips{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ================= Header ================= -->
+  <header class="top">
+    <div class="brand">
+      <div class="logo">WP</div>
+      <div>
+        <h1>WinPanel 服务器管理面板</h1>
+        <div class="sub">Windows 10 Pro · 22H2 · 静态演示（假数据）</div>
+      </div>
+    </div>
+    <nav class="tabs">
+      <a href="#overview">概览</a>
+      <a href="#network">网络</a>
+      <a href="#process">进程</a>
+      <a href="#history">历史负载</a>
+      <a href="#logs">日志</a>
+    </nav>
+    <div class="chips">
+      <span class="chip">主机 <b>WIN-SRV-01</b></span>
+      <span class="chip">内网 <b>192.168.1.10</b></span>
+      <span class="chip">运行 <b id="uptime">47 天 06:12:33</b></span>
+      <span class="chip" id="clock">--:--:--</span>
+      <span class="live"><span class="dot"></span>实时刷新 2s</span>
+    </div>
+  </header>
+
+  <!-- ================= 核心指标 ================= -->
+  <section id="overview">
+    <div class="grid-metrics">
+
+      <!-- CPU -->
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title"><span class="swatch" style="background:var(--orange)"></span>CPU 使用率</span>
+          <span class="pill">8 核 16 线程</span>
+        </div>
+        <div class="ring-wrap">
+          <svg class="ring" viewBox="0 0 150 150">
+            <circle class="bg" cx="75" cy="75" r="62"></circle>
+            <circle class="fg" data-ring="cpu" cx="75" cy="75" r="62" stroke="var(--orange)"></circle>
+          </svg>
+          <div class="ring-center">
+            <div class="ring-value"><span id="v-cpu">38</span><small>%</small></div>
+            <div class="ring-sub">3.70 GHz</div>
+          </div>
+        </div>
+        <div class="metric-foot">
+          <div><div class="k">进程</div><div class="v" id="v-procs">186</div></div>
+          <div><div class="k">线程</div><div class="v" id="v-threads">2 418</div></div>
+          <div><div class="k">温度</div><div class="v" id="v-temp">61 °C</div></div>
+        </div>
+      </div>
+
+      <!-- 内存 -->
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title"><span class="swatch" style="background:var(--blue)"></span>内存占用</span>
+          <span class="pill">32 GB DDR4</span>
+        </div>
+        <div class="ring-wrap">
+          <svg class="ring" viewBox="0 0 150 150">
+            <circle class="bg" cx="75" cy="75" r="62"></circle>
+            <circle class="fg" data-ring="mem" cx="75" cy="75" r="62" stroke="var(--blue)"></circle>
+          </svg>
+          <div class="ring-center">
+            <div class="ring-value"><span id="v-mem">62</span><small>%</small></div>
+            <div class="ring-sub" id="v-mem-gb">19.8 / 32 GB</div>
+          </div>
+        </div>
+        <div class="metric-foot">
+          <div><div class="k">已用</div><div class="v" id="v-mem-used">19.8 GB</div></div>
+          <div><div class="k">可用</div><div class="v" id="v-mem-free">12.2 GB</div></div>
+          <div><div class="k">缓存</div><div class="v">5.4 GB</div></div>
+        </div>
+      </div>
+
+      <!-- GPU -->
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title"><span class="swatch" style="background:var(--yellow)"></span>GPU 使用率</span>
+          <span class="pill">RTX 3060 12G</span>
+        </div>
+        <div class="ring-wrap">
+          <svg class="ring" viewBox="0 0 150 150">
+            <circle class="bg" cx="75" cy="75" r="62"></circle>
+            <circle class="fg" data-ring="gpu" cx="75" cy="75" r="62" stroke="var(--yellow)"></circle>
+          </svg>
+          <div class="ring-center">
+            <div class="ring-value"><span id="v-gpu">27</span><small>%</small></div>
+            <div class="ring-sub" id="v-gpu-clock">1 770 MHz</div>
+          </div>
+        </div>
+        <div class="metric-foot">
+          <div><div class="k">显存占用</div><div class="v" id="v-vram-ring">47 %</div></div>
+          <div><div class="k">编码器</div><div class="v">12 %</div></div>
+          <div><div class="k">温度</div><div class="v" id="v-gpu-temp">54 °C</div></div>
+        </div>
+      </div>
+
+      <!-- 显存 -->
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title"><span class="swatch" style="background:var(--orange)"></span>显存占用</span>
+          <span class="pill">12 GB GDDR6</span>
+        </div>
+        <div class="ring-wrap">
+          <svg class="ring" viewBox="0 0 150 150">
+            <circle class="bg" cx="75" cy="75" r="62"></circle>
+            <circle class="fg" data-ring="vram" cx="75" cy="75" r="62" stroke="var(--orange)"></circle>
+          </svg>
+          <div class="ring-center">
+            <div class="ring-value"><span id="v-vram">47</span><small>%</small></div>
+            <div class="ring-sub" id="v-vram-gb">5.6 / 12 GB</div>
+          </div>
+        </div>
+        <div class="metric-foot">
+          <div><div class="k">专用显存</div><div class="v" id="v-vram-ded">5.6 GB</div></div>
+          <div><div class="k">共享显存</div><div class="v">0.8 GB</div></div>
+          <div><div class="k">总专用</div><div class="v">12 GB</div></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= 网络 ================= -->
+  <section id="network">
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title"><span class="swatch" style="background:var(--blue)"></span>网络吞吐（实时）</span>
+        <div class="legend">
+          <span class="lg"><i style="background:var(--orange)"></i>上行 Up</span>
+          <span class="lg"><i style="background:var(--blue)"></i>下行 Down</span>
+          <span class="pill">以太网 · 1 Gbps</span>
+        </div>
+      </div>
+      <div class="net-nums">
+        <div class="net-num">
+          <div class="k"><span class="swatch" style="background:var(--orange)"></span>上行速率</div>
+          <div class="v" id="v-up">3.24<span>MB/s</span></div>
+        </div>
+        <div class="net-num">
+          <div class="k"><span class="swatch" style="background:var(--blue)"></span>下行速率</div>
+          <div class="v" id="v-down">18.6<span>MB/s</span></div>
+        </div>
+        <div class="net-num">
+          <div class="k">今日累计上传</div>
+          <div class="v" id="v-up-total">42.7<span>GB</span></div>
+        </div>
+        <div class="net-num">
+          <div class="k">今日累计下载</div>
+          <div class="v" id="v-down-total">318.5<span>GB</span></div>
+        </div>
+        <div class="net-num">
+          <div class="k">丢包 / 延迟</div>
+          <div class="v" style="color:var(--ok)">0.0 % / 6 ms</div>
+        </div>
+      </div>
+      <div class="net-canvas-box"><canvas id="netChart"></canvas></div>
+    </div>
+  </section>
+
+  <!-- ================= 进程 + 日志 ================= -->
+  <section class="grid-2">
+    <div class="card" id="process">
+      <div class="card-head">
+        <span class="card-title">进程 · 按 CPU 排序（任务管理器风格）</span>
+        <div class="legend">
+          <span class="pill">应用 42</span><span class="pill">后台进程 118</span><span class="pill">Windows 进程 26</span>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:34%">名称</th>
+              <th class="num">PID</th>
+              <th>状态</th>
+              <th class="num">CPU</th>
+              <th class="num">内存</th>
+              <th class="num">磁盘</th>
+              <th class="num">网络</th>
+            </tr>
+          </thead>
+          <tbody id="procBody"><!-- JS 渲染 --></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card" id="logs">
+      <div class="card-head">
+        <span class="card-title">系统日志</span>
+        <span class="pill">今天 36 条</span>
+      </div>
+      <div class="log-list" id="logList"><!-- JS 渲染 --></div>
+    </div>
+  </section>
+
+  <!-- ================= 历史负载曲线 ================= -->
+  <section id="history">
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title"><span class="swatch" style="background:var(--orange)"></span>历史负载曲线 · 服务器负载日志</span>
+        <div class="legend">
+          <span class="lg" data-series="cpu"><i style="background:var(--orange)"></i>CPU</span>
+          <span class="lg" data-series="mem"><i style="background:var(--blue)"></i>内存</span>
+          <span class="lg" data-series="gpu"><i style="background:var(--yellow)"></i>GPU</span>
+          <span class="pill">采样：1 分钟均值</span>
+        </div>
+        <div class="range-tabs">
+          <div class="rt active" data-range="1d">1 天</div>
+          <div class="rt" data-range="1m">1 个月</div>
+          <div class="rt" data-range="1y">1 年</div>
+        </div>
+      </div>
+      <div class="hist-box">
+        <canvas id="histChart"></canvas>
+        <div class="tooltip" id="histTip"></div>
+      </div>
+      <div class="metric-foot" style="border-top:1px dashed var(--line);margin-top:12px">
+        <div><div class="k">平均 CPU</div><div class="v" id="avg-cpu" style="color:var(--orange)">—</div></div>
+        <div><div class="k">峰值 CPU</div><div class="v" id="max-cpu" style="color:var(--orange)">—</div></div>
+        <div><div class="k">平均内存</div><div class="v" id="avg-mem" style="color:var(--blue)">—</div></div>
+        <div><div class="k">峰值内存</div><div class="v" id="max-mem" style="color:var(--blue)">—</div></div>
+        <div><div class="k">平均 GPU</div><div class="v" id="avg-gpu" style="color:#C99400">—</div></div>
+        <div><div class="k">峰值 GPU</div><div class="v" id="max-gpu" style="color:#C99400">—</div></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="foot">WinPanel 演示版 · 页面数据均为模拟假数据，仅用于 UI 效果预览 · © 2025</div>
+</div>
+
+<script>
+/* ===================== 工具 ===================== */
+const $  = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const rand = (a,b) => a + Math.random()*(b-a);
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+const RING_R = 62, RING_C = 2*Math.PI*RING_R;
+const C = { orange:'#FF5F00', yellow:'#FFC300', blue:'#0B5CFF' };
+
+function colorFor(p){ return p >= 70 ? C.orange : (p >= 40 ? C.yellow : C.blue); }
+
+function setRing(name, pct){
+  const el = document.querySelector(`[data-ring="${name}"]`);
+  if(el) el.style.strokeDasharray = `${RING_C*pct/100} ${RING_C}`;
+}
+
+/* ===================== 状态（假数据） ===================== */
+const state = { cpu:38, mem:62, gpu:27, vram:47, up:3.24, down:18.6, upTotal:42.7, downTotal:318.5 };
+const upHist = Array.from({length:80}, () => rand(1.5,4.5));
+const downHist = Array.from({length:80}, () => rand(8,26));
+
+/* ===================== 时钟 / 运行时间 ===================== */
+let uptimeSec = 47*86400 + 6*3600 + 12*60 + 33;
+function clockTick(){
+  const now = new Date();
+  $('#clock').textContent = now.toLocaleTimeString('zh-CN', {hour12:false});
+  uptimeSec++;
+  const d = Math.floor(uptimeSec/86400), r = uptimeSec%86400;
+  const p = n => String(n).padStart(2,'0');
+  $('#uptime').textContent = `${d} 天 ${p(Math.floor(r/3600))}:${p(Math.floor(r%3600/60))}:${p(r%60)}`;
+}
+clockTick();
+setInterval(clockTick, 1000);
+
+/* ===================== 进程表（任务管理器风格） ===================== */
+const processes = [
+  {n:'sqlservr.exe',   p:'SQL Server Database Engine', pid:4128, ic:'SQ', cc:'#E0392B', st:'run', cpu:24.5, mem:6842, dk:12.4, nw:1.8},
+  {n:'chrome.exe',     p:'C:\\Program Files\\Google\\Chrome', pid:9820, ic:'CH', cc:'#4285F4', st:'run', cpu:13.2, mem:2156, dk:1.2, nw:4.6},
+  {n:'MsMpEng.exe',    p:'Windows Defender Antivirus Service', pid:2764, ic:'DE', cc:'#0B5CFF', st:'run', cpu:7.8, mem:318, dk:3.6, nw:0},
+  {n:'java.exe',       p:'D:\\app\\minecraft-server', pid:6352, ic:'JV', cc:'#FF5F00', st:'run', cpu:6.4, mem:4096, dk:0.8, nw:0.9},
+  {n:'python.exe',     p:'C:\\agent\\collector.py', pid:7716, ic:'PY', cc:'#3776AB', st:'run', cpu:4.1, mem:286, dk:0.4, nw:0.3},
+  {n:'node.exe',       p:'E:\\panel\\server.js', pid:8456, ic:'ND', cc:'#3FB950', st:'run', cpu:3.6, mem:412, dk:0.6, nw:1.1},
+  {n:'dwm.exe',        p:'Desktop Window Manager', pid:1580, ic:'DW', cc:'#5B6172', st:'run', cpu:2.9, mem:186, dk:0.1, nw:0},
+  {n:'w3wp.exe',       p:'IIS Worker Process', pid:5204, ic:'IIS', cc:'#00A2FF', st:'run', cpu:2.2, mem:524, dk:1.9, nw:2.2},
+  {n:'svchost.exe',    p:'C:\\Windows\\System32', pid:1348, ic:'SV', cc:'#9AA1B2', st:'run', cpu:1.4, mem:96, dk:0.3, nw:0},
+  {n:'lsass.exe',      p:'C:\\Windows\\System32', pid:1004, ic:'LS', cc:'#9AA1B2', st:'run', cpu:0.9, mem:64, dk:0.1, nw:0},
+  {n:'SearchIndexer.exe', p:'Microsoft Windows Search', pid:3980, ic:'SE', cc:'#FFC300', st:'sus', cpu:0.6, mem:148, dk:2.8, nw:0},
+  {n:'OneDrive.exe',   p:'C:\\Users\\admin\\OneDrive', pid:6628, ic:'OD', cc:'#0B5CFF', st:'run', cpu:0.4, mem:126, dk:0.2, nw:0.7},
+  {n:'System',         p:'NT Kernel & System', pid:4, ic:'SY', cc:'#12141A', st:'imp', cpu:0.3, mem:22, dk:0.5, nw:0},
+  {n:'Teams.exe',      p:'C:\\Users\\admin\\AppData', pid:9044, ic:'TM', cc:'#6264A7', st:'run', cpu:0.2, mem:342, dk:0.1, nw:0.4},
+  {n:'explorer.exe',   p:'C:\\Windows\\explorer.exe', pid:7012, ic:'EX', cc:'#FFC300', st:'run', cpu:0.2, mem:158, dk:0.1, nw:0},
+];
+const ST = {run:['运行','st-run'], sus:['已暂停','st-sus'], imp:['高效模式','st-imp']};
+
+function barHtml(pct, val){
+  const cls = pct >= 70 ? 'b-orange' : (pct >= 40 ? 'b-yellow' : 'b-blue');
+  return `<div class="bar-cell"><span class="mono">${val}</span><span class="bar"><i class="${cls}" style="width:${clamp(pct,2,100)}%"></i></span></div>`;
+}
+
+function renderProcesses(){
+  $('#procBody').innerHTML = processes.map((t,i) => `
+    <tr>
+      <td>
+        <div class="app">
+          <div class="app-ico" style="background:${t.cc}">${t.ic}</div>
+          <div><div class="nm">${t.n}</div><div class="pth">${t.p}</div></div>
+        </div>
+      </td>
+      <td class="num mono">${t.pid}</td>
+      <td><span class="status ${ST[t.st][1]}">${ST[t.st][0]}</span></td>
+      <td class="num" data-cpu="${i}">${barHtml(t.cpu, t.cpu.toFixed(1) + '%')}</td>
+      <td class="num" data-mem="${i}">${barHtml(t.mem/80, (t.mem/1024).toFixed(2) + ' GB')}</td>
+      <td class="num" data-dk="${i}">${barHtml(t.dk*4, t.dk.toFixed(1) + ' MB/s')}</td>
+      <td class="num" data-nw="${i}">${barHtml(t.nw*8, t.nw.toFixed(1) + ' MB/s')}</td>
+    </tr>`).join('');
+}
+
+function jitterProcesses(){
+  processes.forEach((t,i) => {
+    t.cpu = clamp(t.cpu + rand(-2.2, 2.2), 0, t.st==='imp'?1:55);
+    if(Math.random() < .06) t.cpu = clamp(t.cpu + rand(3,14), 0, 60);
+    t.mem = clamp(t.mem + rand(-60, 60), 20, 8000);
+    t.dk  = clamp(t.dk + rand(-1,1), 0, 40);
+    t.nw  = clamp(t.nw + rand(-.6,.6), 0, 12);
+
+    const cpuCell = document.querySelector(`[data-cpu="${i}"]`);
+    const memCell = document.querySelector(`[data-mem="${i}"]`);
+    const dkCell  = document.querySelector(`[data-dk="${i}"]`);
+    const nwCell  = document.querySelector(`[data-nw="${i}"]`);
+    if(cpuCell) cpuCell.innerHTML = barHtml(t.cpu, t.cpu.toFixed(1) + '%');
+    if(memCell) memCell.innerHTML = barHtml(t.mem/80, (t.mem/1024).toFixed(2) + ' GB');
+    if(dkCell)  dkCell.innerHTML  = barHtml(t.dk*4, t.dk.toFixed(1) + ' MB/s');
+    if(nwCell)  nwCell.innerHTML  = barHtml(t.nw*8, t.nw.toFixed(1) + ' MB/s');
+  });
+}
+
+/* ===================== 系统日志 ===================== */
+const logs = [
+  ['14:36:12','crit','CPU 使用率超过 90%，持续 3 分钟（sqlservr.exe 执行批量作业）'],
+  ['14:31:40','warn','显存占用达到 88%，接近阈值 90%'],
+  ['14:22:05','ok','Windows Update 服务重启完成，补丁 KB5034123 已安装'],
+  ['14:15:58','info','网络接口「以太网」速率协商为 1 Gbps 全双工'],
+  ['13:58:21','warn','磁盘 D: 剩余空间低于 15%（剩余 168 GB）'],
+  ['13:47:09','info','防火墙放行规则：TCP 8080 (WinPanel-Agent)'],
+  ['13:30:00','ok','每日快照备份完成，耗时 4 分 12 秒'],
+  ['13:12:44','info','用户 admin 登录成功（来源 192.168.1.23）'],
+  ['12:55:31','warn','内存占用超过 80%，已触发缓存回收'],
+  ['12:40:17','info','服务「WinPanel-Agent」心跳正常，延迟 6 ms'],
+  ['12:18:02','crit','GPU 编码器超载，推流任务短暂中断并自动恢复'],
+  ['11:59:45','ok','GPU 温度回落至 54 °C，风扇转速恢复正常'],
+];
+const TAG = {info:['信息','t-info'], warn:['警告','t-warn'], crit:['严重','t-crit'], ok:['正常','t-ok']};
+$('#logList').innerHTML = logs.map(([t,l,m]) => `
+  <div class="log-item">
+    <div class="log-time">${t}</div>
+    <div class="log-body"><div class="log-msg"><span class="log-tag ${TAG[l][1]}">${TAG[l][0]}</span>${m}</div></div>
+  </div>`).join('');
+
+/* ===================== 实时刷新 ===================== */
+function tickMetrics(){
+  state.cpu   = clamp(state.cpu + rand(-7,7), 4, 96);
+  state.mem   = clamp(state.mem + rand(-2.5,2.5), 35, 92);
+  state.gpu   = clamp(state.gpu + rand(-9,9), 2, 98);
+  state.vram  = clamp(state.vram + rand(-4,4), 20, 95);
+  state.up    = clamp(state.up + rand(-1.4,1.4), .2, 12);
+  state.down  = clamp(state.down + rand(-5,5), 2, 95);
+  if(Math.random()<.08) state.down = rand(60,110);
+  state.upTotal   += state.up/512;
+  state.downTotal += state.down/512;
+
+  upHist.push(state.up); upHist.shift();
+  downHist.push(state.down); downHist.shift();
+
+  $('#v-cpu').textContent  = Math.round(state.cpu);
+  $('#v-mem').textContent  = Math.round(state.mem);
+  $('#v-gpu').textContent  = Math.round(state.gpu);
+  $('#v-vram').textContent = Math.round(state.vram);
+
+  const memGB = (32*state.mem/100);
+  $('#v-mem-gb').textContent = `${memGB.toFixed(1)} / 32 GB`;
+  $('#v-mem-used').textContent = memGB.toFixed(1) + ' GB';
+  $('#v-mem-free').textContent = (32-memGB).toFixed(1) + ' GB';
+
+  const vGB = (12*state.vram/100);
+  $('#v-vram-gb').textContent = `${vGB.toFixed(1)} / 12 GB`;
+  $('#v-vram-ded').textContent = vGB.toFixed(1) + ' GB';
+  $('#v-vram-ring').textContent = Math.round(state.vram) + ' %';
+
+  $('#v-up').innerHTML   = state.up.toFixed(2)   + '<span>MB/s</span>';
+  $('#v-down').innerHTML = state.down.toFixed(1) + '<span>MB/s</span>';
+  $('#v-up-total').innerHTML   = state.upTotal.toFixed(1)   + '<span>GB</span>';
+  $('#v-down-total').innerHTML = state.downTotal.toFixed(1) + '<span>GB</span>';
+
+  $('#v-temp').textContent  = Math.round(48 + state.cpu*0.28) + ' °C';
+  $('#v-gpu-temp').textContent = Math.round(44 + state.gpu*0.38) + ' °C';
+  $('#v-gpu-clock').textContent = Math.round(300 + state.gpu*16.5) + ' MHz';
+  $('#v-procs').textContent  = 180 + Math.round(rand(0,12));
+  $('#v-threads').textContent = (2400 + Math.round(rand(0,60))).toLocaleString('en-US').replace(',', ' ');
+
+  setRing('cpu', state.cpu); setRing('mem', state.mem);
+  setRing('gpu', state.gpu); setRing('vram', state.vram);
+  drawNet();
+}
+
+/* ===================== Canvas 基础 ===================== */
+function ctx2d(canvas){
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  canvas.width = w*dpr; canvas.height = h*dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,w,h);
+  return {ctx, w, h};
+}
+function smoothLine(ctx, pts){
+  ctx.beginPath();
+  ctx.moveTo(pts[0][0], pts[0][1]);
+  for(let i=1;i<pts.length-1;i++){
+    const xc = (pts[i][0]+pts[i+1][0])/2, yc = (pts[i][1]+pts[i+1][1])/2;
+    ctx.quadraticCurveTo(pts[i][0], pts[i][1], xc, yc);
+  }
+  const last = pts[pts.length-1];
+  ctx.lineTo(last[0], last[1]);
+}
+
+/* ===================== 网络实时图 ===================== */
+function drawNet(){
+  const {ctx,w,h} = ctx2d($('#netChart'));
+  const pad = {l:56,r:12,t:12,b:20};
+  const pw = w-pad.l-pad.r, ph = h-pad.t-pad.b;
+  const max = Math.max(30, ...upHist, ...downHist) * 1.15;
+
+  ctx.font = '10.5px "Segoe UI", sans-serif';
+  ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  for(let i=0;i<=3;i++){
+    const y = pad.t + ph*i/3;
+    ctx.strokeStyle = '#EEF0F4'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(w-pad.r,y); ctx.stroke();
+    ctx.fillStyle='#9AA1B2';
+    ctx.textAlign = 'left';
+    ctx.fillText((max*(1-i/3)).toFixed(0)+' MB/s', 2, y);
+    ctx.textAlign = 'right';
+  }
+  const xAt = i => pad.l + pw*i/(upHist.length-1);
+  const yAt = v => pad.t + ph*(1 - v/max);
+
+  [[downHist, C.blue], [upHist, C.orange]].forEach(([data, col]) => {
+    const pts = data.map((v,i) => [xAt(i), yAt(v)]);
+    const grad = ctx.createLinearGradient(0,pad.t,0,h-pad.b);
+    grad.addColorStop(0, col + '33'); grad.addColorStop(1, col + '00');
+    smoothLine(ctx, pts); ctx.lineTo(pts[pts.length-1][0], h-pad.b); ctx.lineTo(pts[0][0], h-pad.b); ctx.closePath();
+    ctx.fillStyle = grad; ctx.fill();
+
+    smoothLine(ctx, pts);
+    ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.lineJoin = 'round'; ctx.stroke();
+
+    const lp = pts[pts.length-1];
+    ctx.beginPath(); ctx.arc(lp[0], lp[1], 3.5, 0, Math.PI*2);
+    ctx.fillStyle = col; ctx.fill();
+    ctx.beginPath(); ctx.arc(lp[0], lp[1], 6.5, 0, Math.PI*2);
+    ctx.strokeStyle = col + '55'; ctx.lineWidth = 2; ctx.stroke();
+  });
+
+  ctx.textAlign='center'; ctx.fillStyle='#9AA1B2';
+  ['-160s','-120s','-80s','-40s','现在'].forEach((t,i)=>{
+    ctx.fillText(t, pad.l + pw*i/4, h-8);
+  });
+}
+
+/* ===================== 历史负载曲线 ===================== */
+const ranges = {
+  '1d': {labels: Array.from({length:24},(_,i)=> String(i).padStart(2,'0')+':00'), step:3},
+  '1m': {labels: Array.from({length:30},(_,i)=> (i+1)+'日'), step:3},
+  '1y': {labels: ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], step:1},
+};
+function series(n, base, amp, wave){
+  const out = []; let v = base;
+  for(let i=0;i<n;i++){
+    v += rand(-amp, amp) + Math.sin(i/n*Math.PI*2*wave)*amp*0.6;
+    v = clamp(v, 6, 96);
+    out.push(Math.round(v));
+  }
+  return out;
+}
+const histData = {
+  '1d': {cpu:series(24,42,9,1), mem:series(24,60,4,1), gpu:series(24,30,10,1)},
+  '1m': {cpu:series(30,46,7,2), mem:series(30,63,4,1), gpu:series(30,33,8,2)},
+  '1y': {cpu:series(12,50,8,1), mem:series(12,66,4,1), gpu:series(12,36,9,1)},
+};
+let currentRange = '1d';
+const active = {cpu:true, mem:true, gpu:true};
+const SERIES_DEF = [
+  {k:'cpu', name:'CPU',  color:C.orange},
+  {k:'mem', name:'内存', color:C.blue},
+  {k:'gpu', name:'GPU',  color:C.yellow},
+];
+let histGeom = null;
+
+function drawHist(){
+  const {ctx,w,h} = ctx2d($('#histChart'));
+  const d = histData[currentRange];
+  const labels = ranges[currentRange].labels;
+  const n = labels.length;
+  const pad = {l:46,r:16,t:16,b:30};
+  const pw = w-pad.l-pad.r, ph = h-pad.t-pad.b;
+  const xAt = i => pad.l + (n===1?0:pw*i/(n-1));
+  const yAt = v => pad.t + ph*(1 - v/100);
+  histGeom = {pad, pw, ph, n, xAt, yAt};
+
+  ctx.font = '10.5px "Segoe UI", sans-serif';
+  ctx.textAlign='right'; ctx.textBaseline='middle';
+  for(let i=0;i<=4;i++){
+    const y = pad.t + ph*i/4;
+    ctx.strokeStyle = '#EEF0F4'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(w-pad.r,y); ctx.stroke();
+    ctx.fillStyle='#9AA1B2'; ctx.fillText((100-i*25)+'%', pad.l-8, y);
+  }
+  ctx.textAlign='center'; ctx.textBaseline='top';
+  const stp = ranges[currentRange].step;
+  labels.forEach((lb,i)=>{
+    if(i % stp === 0 || i === n-1){
+      ctx.fillStyle='#9AA1B2';
+      ctx.fillText(lb, xAt(i), h-pad.b+10);
+    }
+  });
+
+  SERIES_DEF.forEach(s => {
+    if(!active[s.k]) return;
+    const pts = d[s.k].map((v,i)=>[xAt(i), yAt(v)]);
+    const grad = ctx.createLinearGradient(0,pad.t,0,h-pad.b);
+    grad.addColorStop(0, s.color+'2E'); grad.addColorStop(1, s.color+'00');
+    smoothLine(ctx,pts); ctx.lineTo(pts[n-1][0], h-pad.b); ctx.lineTo(pts[0][0], h-pad.b); ctx.closePath();
+    ctx.fillStyle=grad; ctx.fill();
+
+    smoothLine(ctx,pts);
+    ctx.strokeStyle=s.color; ctx.lineWidth=2.2; ctx.lineJoin='round'; ctx.stroke();
+
+    pts.forEach(p=>{ ctx.beginPath(); ctx.arc(p[0],p[1],2.6,0,Math.PI*2); ctx.fillStyle='#fff'; ctx.fill(); ctx.strokeStyle=s.color; ctx.lineWidth=1.6; ctx.stroke(); });
+  });
+  updateStats();
+}
+
+function updateStats(){
+  const d = histData[currentRange];
+  SERIES_DEF.forEach(s=>{
+    const arr = d[s.k];
+    const avg = Math.round(arr.reduce((a,b)=>a+b,0)/arr.length);
+    const max = Math.max(...arr);
+    $('#avg-'+s.k).textContent = avg + ' %';
+    $('#max-'+s.k).textContent = max + ' %';
+  });
+}
+
+/* 悬停提示 */
+const tip = $('#histTip');
+$('#histChart').addEventListener('mousemove', e => {
+  if(!histGeom) return;
+  const rect = e.currentTarget.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const {pad, pw, n, xAt} = histGeom;
+  let i = Math.round((mx - pad.l) / (n>1 ? pw/(n-1) : 1));
+  i = clamp(i, 0, n-1);
+  const d = histData[currentRange];
+  tip.style.left = xAt(i) + 'px';
+  tip.style.top  = (e.clientY - rect.top) + 'px';
+  tip.style.opacity = 1;
+  tip.innerHTML = `<div class="tt-t">${ranges[currentRange].labels[i]}</div>` +
+    SERIES_DEF.filter(s=>active[s.k]).map(s =>
+      `<div><i style="background:${s.color}"></i>${s.name}：${d[s.k][i]} %</div>`).join('');
+});
+$('#histChart').addEventListener('mouseleave', () => tip.style.opacity = 0);
+
+/* 范围切换 / 图例开关 */
+$$('.rt').forEach(el => el.addEventListener('click', () => {
+  $$('.rt').forEach(x=>x.classList.remove('active'));
+  el.classList.add('active');
+  currentRange = el.dataset.range;
+  tip.style.opacity = 0;
+  drawHist();
+}));
+$$('.lg[data-series]').forEach(el => el.addEventListener('click', () => {
+  const k = el.dataset.series;
+  if(active[k] && Object.values(active).filter(Boolean).length === 1) return;
+  active[k] = !active[k];
+  el.classList.toggle('off', !active[k]);
+  drawHist();
+}));
+
+/* ===================== 启动 ===================== */
+renderProcesses();
+setRing('cpu', state.cpu); setRing('mem', state.mem);
+setRing('gpu', state.gpu); setRing('vram', state.vram);
+drawHist();
+drawNet();
+
+setInterval(tickMetrics, 2000);
+setInterval(jitterProcesses, 2000);
+window.addEventListener('resize', () => { drawNet(); drawHist(); });
+</script>
+</body>
+</html>
