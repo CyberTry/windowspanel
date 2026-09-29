@@ -1,0 +1,10 @@
+C:\Program Files\dotnet\sdk\8.0.425\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.Sdk.FrameworkReferenceResolution.targets(65,5): warning NETSDK1086: A FrameworkReference for 'Microsoft.AspNetCore.App' was included in the project. This is implicitly referenced by the .NET SDK and you do not typically need to reference it from your project. For more information, see https://aka.ms/sdkimplicitrefs [E:\Users\SagaciousTry\Documents\我的文档\我的项目\WindowsPanel\src\WindowsPanel.Server\WindowsPanel.Server.csproj]
+C:\Program Files\dotnet\sdk\8.0.425\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.Sdk.FrameworkReferenceResolution.targets(65,5): warning NETSDK1086: A FrameworkReference for 'Microsoft.AspNetCore.App' was included in the project. This is implicitly referenced by the .NET SDK and you do not typically need to reference it from your project. For more information, see https://aka.ms/sdkimplicitrefs [E:\Users\SagaciousTry\Documents\我的文档\我的项目\WindowsPanel\src\WindowsPanel.Server\WindowsPanel.Server.csproj]
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://127.0.0.1:9721
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Production
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: E:\Users\SagaciousTry\Documents\我的文档\我的项目\WindowsPanel\src\WindowsPanel.Server

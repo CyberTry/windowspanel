@@ -95,9 +95,12 @@ body{
 .log-row:hover .chev,.stat-table tbody tr:hover .chev{transform:translate(0,-50%);opacity:1}
 
 /* ---- tooltip ---- */
-.chart-tip{position:absolute;background:rgba(0,0,0,.92);border:1px solid var(--yellow);color:var(--yellow);padding:5px 9px;font:11px Consolas,monospace;pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .18s, transform .18s;z-index:5;white-space:nowrap;letter-spacing:.5px;box-shadow:0 4px 12px rgba(0,0,0,.6),0 0 10px rgba(255,230,0,.25)}
+.chart-tip{position:absolute;background:rgba(0,0,0,.92);border:1px solid var(--yellow);color:var(--yellow);padding:5px 9px;font:11px Consolas,monospace;pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .18s, transform .18s;z-index:5;min-width:96px;letter-spacing:.5px;box-shadow:0 4px 12px rgba(0,0,0,.6),0 0 10px rgba(255,230,0,.25)}
 .chart-tip.show{opacity:1;transform:none}
-.chart-tip b{color:var(--txt-dim);font-weight:400;margin-right:4px}
+.chart-tip .t-row{display:flex;justify-content:space-between;align-items:center;gap:10px;line-height:1.55}
+.chart-tip .t-lbl{font-size:9px;letter-spacing:1.5px}
+.chart-tip .t-val{font-family:Consolas,monospace;font-weight:700;color:var(--yellow)}
+.chart-tip .t-time{font-size:9px;color:var(--txt-dim);letter-spacing:1px;border-bottom:1px dashed var(--line);padding-bottom:3px;margin-bottom:3px;display:flex;justify-content:space-between;gap:10px}
 
 /* ---- count-up entry ---- */
 @keyframes count-pop{
@@ -842,28 +845,59 @@ function wireChartHover(id){
     const r=cv.getBoundingClientRect();
     const x=e.clientX-r.left,y=e.clientY-r.top;
     hoverState[id]=x;
-    // build a tooltip value (read from last cached data — simplified)
-    let txt="";
-    if(id==="main"){
-      // approximate value at this x (read from current chart area)
-      const v=Math.max(0,Math.min(100,100-(y/r.height)*100));
-      txt="<b>CPU</b>"+v.toFixed(0)+"%";
-    }else if(id==="hist"){
-      txt="<b>at</b>"+x.toFixed(0)+"px";
-    }else if(id==="net"){
-      const rxPct=Math.max(0,Math.min(100,100-(y/r.height)*100));
-      txt="<b>↓</b>"+(rxPct*0.05).toFixed(2)+" MB/s";
+    // sample the actual curve values at this x position (matches drawMain/drawNet seeds exactly)
+    let html="";
+    if(id==="mainChart"){
+      const n=140;
+      const idx=Math.max(0,Math.min(n-1,Math.round(x/r.width*(n-1))));
+      const cpuV=Math.max(0,Math.min(100,series(11,n,30,6,10)[idx]));
+      const memV=Math.max(0,Math.min(100,series(22,n,46,3,4)[idx]));
+      const gpuV=Math.max(0,Math.min(100,series(33,n,32,8,14)[idx]));
+      // time label: assume 60s window, idx/n spans 0..60s
+      const sec=Math.round(idx/n*60);
+      const tStr=`-${String(60-sec).padStart(2,"0")}s`;
+      html=`<div class="t-time"><span>T</span><span>${tStr}</span></div>
+<div class="t-row"><span class="t-lbl" style="color:#FF9F1C">CPU</span><span class="t-val">${cpuV.toFixed(1)}%</span></div>
+<div class="t-row"><span class="t-lbl" style="color:#FFE600">MEM</span><span class="t-val">${memV.toFixed(1)}%</span></div>
+<div class="t-row"><span class="t-lbl" style="color:#3EC6FF">GPU</span><span class="t-val">${gpuV.toFixed(1)}%</span></div>`;
+    }else if(id==="netChart"){
+      const n=140;
+      const idx=Math.max(0,Math.min(n-1,Math.round(x/r.width*(n-1))));
+      const rxPct=Math.max(0,Math.min(100,series(44,n,30,10,22)[idx]));
+      const txPct=Math.max(0,Math.min(100,series(55,n,10,4,6)[idx]));
+      // map 0-100% to 0-4 MB/s (label range)
+      html=`<div class="t-row"><span class="t-lbl" style="color:#3EC6FF">RX ↓</span><span class="t-val">${(rxPct*0.04).toFixed(2)} MB/s</span></div>
+<div class="t-row"><span class="t-lbl" style="color:#FF9F1C">TX ↑</span><span class="t-val">${(txPct*0.04).toFixed(2)} MB/s</span></div>`;
+    }else if(id==="histChart"){
+      // 200 points across 1 day (00:00 - 23:59)
+      const n=200;
+      const idx=Math.max(0,Math.min(n-1,Math.round(x/r.width*(n-1))));
+      const totalMin=Math.round(idx/(n-1)*1439);
+      const hh=Math.floor(totalMin/60),mm=totalMin%60;
+      const cpuV=Math.max(0,Math.min(100,series(101,n,34,5,8)[idx]));
+      const memV=Math.max(0,Math.min(100,series(102,n,44,3,4)[idx]));
+      const gpuV=Math.max(0,Math.min(100,series(103,n,20,8,16)[idx]));
+      html=`<div class="t-time"><span>时刻</span><span>${String(hh).padStart(2,"0")}:${String(mm).padStart(2,"0")}</span></div>
+<div class="t-row"><span class="t-lbl" style="color:#FF9F1C">CPU</span><span class="t-val">${cpuV.toFixed(1)}%</span></div>
+<div class="t-row"><span class="t-lbl" style="color:#FFE600">MEM</span><span class="t-val">${memV.toFixed(1)}%</span></div>
+<div class="t-row"><span class="t-lbl" style="color:#3EC6FF">GPU</span><span class="t-val">${gpuV.toFixed(1)}%</span></div>`;
     }
-    tip.innerHTML=txt;
+    tip.innerHTML=html;
     tip.classList.add("show");
-    tip.style.left=Math.min(r.width-80,x+12)+"px";
-    tip.style.top=Math.max(0,y-30)+"px";
-    if(id==="main")drawMain();else if(id==="hist")drawHist();else if(id==="net")drawNet();
+    // smart positioning: flip to left if overflowing right; place above cursor
+    const tw=tip.offsetWidth,th=tip.offsetHeight;
+    let lx=x+14;
+    if(lx+tw>r.width-4)lx=x-tw-14;
+    let ly=y-th-10;
+    if(ly<0)ly=y+14;
+    tip.style.left=lx+"px";
+    tip.style.top=ly+"px";
+    if(id==="mainChart")drawMain();else if(id==="histChart")drawHist();else if(id==="netChart")drawNet();
   });
   cv.addEventListener("mouseleave",()=>{
     hoverState[id]=null;
     tip.classList.remove("show");
-    if(id==="main")drawMain();else if(id==="hist")drawHist();else if(id==="net")drawNet();
+    if(id==="mainChart")drawMain();else if(id==="histChart")drawHist();else if(id==="netChart")drawNet();
   });
 }
 ["mainChart","histChart","netChart"].forEach(wireChartHover);
