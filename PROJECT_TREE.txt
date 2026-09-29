@@ -1,0 +1,78 @@
+WindowsPanel/                              <- 项目根（README.md + ui-preview.html 静态预览保留）
+├── WindowsPanel.sln                        <- .NET 8 解决方案（Core + Storage + Server 三个项目）
+├── README.md                               <- 设计文档（原始，未改）
+├── README_DEV.md                           <- 开发说明（如何构建、运行、发布）
+├── .gitignore
+├── ui-preview.html                         <- 之前的静态预览（保留供设计参考）
+├── preview-*.png                           <- 之前的预览截图（保留）
+└── src/
+    ├── WindowsPanel.Core/                  <- 领域层 · 纯采集 + 模型
+    │   ├── WindowsPanel.Core.csproj        <- net8.0-windows, PackageReference: System.Management
+    │   ├── ICollector.cs                   <- 采集器接口（看门狗 + ConsecutiveFailures）
+    │   ├── Models/
+    │   │   ├── MetricNames.cs              <- 指标常量 + 入库白名单
+    │   │   ├── LiveSample.cs               <- 1s 一帧的实时快照（WS 推送）
+    │   │   ├── ProcessInfo.cs              <- 单进程条目
+    │   │   ├── HardwareInfo.cs             <- 一次性硬件信息
+    │   │   └── PanelSnapshot.cs            <- 组装后的完整面板快照
+    │   ├── Aggregation/
+    │   │   └── RingBuffer.cs               <- 线程安全滑动窗口（默认 300 帧 ≈ 5 分钟）
+    │   └── Collectors/
+    │       ├── CpuCollector.cs             <- PDH \Processor Information\_Total\% Processor Utility
+    │       ├── MemoryCollector.cs          <- GlobalMemoryStatusEx（Win32）
+    │       ├── GpuCollector.cs             <- PDH \GPU Engine(*)\Utilization Percentage（降级模式）
+    │       ├── NetworkCollector.cs         <- NetworkInterface 差分（过滤虚拟网卡 + 处理回绕）
+    │       ├── ProcessCollector.cs         <- Process.GetProcesses() + TotalProcessorTime 差分
+    │       └── HardwareInspector.cs        <- WMI 一次性采集
+    │
+    ├── WindowsPanel.Storage/               <- SQLite 仓储
+    │   ├── WindowsPanel.Storage.csproj     <- net8.0-windows, PkgRef: Microsoft.Data.Sqlite + Hosting.Abstractions
+    │   ├── SchemaInitializer.cs            <- 建表 + PRAGMA WAL
+    │   ├── MetricStore.cs                  <- raw/1m/1h 写入与查询
+    │   ├── EventStore.cs                   <- 事件日志（level/category/metric/message）
+    │   └── RetentionService.cs             <- BackgroundService：聚合 + 清理过期点
+    │
+    ├── WindowsPanel.Server/                <- ASP.NET Core 托管 + WS + Minimal API
+    │   ├── WindowsPanel.Server.csproj      <- Microsoft.NET.Sdk.Web
+    │   ├── Program.cs                      <- DI 装配 + WS + StaticFiles
+    │   ├── PanelOptions.cs                 <- 配置（URL / Auth / Sampling / Retention / Alerts）
+    │   ├── appsettings.json                <- 默认配置
+    │   ├── Api/
+    │   │   ├── Dtos.cs                     <- REST DTO
+    │   │   └── ApiEndpoints.cs             <- /api/v1/{summary,processes,history,events,settings}
+    │   ├── Realtime/
+    │   │   └── WebSocketHub.cs             <- WS 注册表 + 每 1s 广播
+    │   ├── Hosting/
+    │   │   ├── PanelState.cs               <- 单例：当前 PanelSnapshot
+    │   │   ├── CollectorWorker.cs          <- BackgroundService：1Hz 调度 + 5s 持久化
+    │   │   └── AlertEvaluator.cs           <- BackgroundService：阈值评估 + 写事件日志
+    │   └── wwwroot/                        <- 前端构建产物（Vite 输出到这里）
+    │
+    └── WindowsPanel.Web/                   <- Vue 3 + Vite + ECharts 前端
+        ├── package.json                    <- deps: vue / vue-router / pinia / echarts / vue-echarts
+        ├── vite.config.ts                  <- dev proxy /api & /ws → 127.0.0.1:9720, build → ../WindowsPanel.Server/wwwroot
+        ├── tsconfig.json
+        ├── tsconfig.node.json
+        ├── index.html
+        └── src/
+            ├── main.ts                     <- createApp + pinia + router
+            ├── App.vue                     <- Header / Sidebar / router-view / Footer
+            ├── env.d.ts
+            ├── router/index.ts             <- 4 路由 + 标题元数据
+            ├── stores/panel.ts             <- Pinia：live / summary / processes / events + 5 ringBuffer
+            ├── api/
+            │   ├── client.ts                <- fetch 客户端 + DTO 类型
+            │   └── ws.ts                   <- 自动重连 LiveSocket（指数退避）
+            ├── components/
+            │   ├── AppHeader.vue           <- Logo / 标题 / WS 状态 / UPTIME / 时钟
+            │   ├── AppSidebar.vue          <- 4 个 nav-btn
+            │   ├── AppFooter.vue           <- WS 状态 / SRC / INTERVAL
+            │   ├── MetricCard.vue          <- 6 宫格指标卡（带 sparkline）
+            │   ├── Sparkline.vue           <- Canvas sparkline（独立组件）
+            │   └── Gauge.vue               <- Canvas 弧形仪表
+            ├── views/
+            │   ├── DashboardView.vue       <- 六宫格 + 实时曲线（ECharts）+ 网络吞吐 + 仪表 + 硬件 + 概览
+            │   ├── ProcessView.vue         <- 进程表（点击列头排序 / 搜索）
+            │   ├── HistoryView.vue         <- 1d/1m/1y 切换 + 多指标 + dataZoom
+            │   └── LogsView.vue            <- 级别过滤 + 搜索 + 分日分组
+            └── styles/global.css           <- ENDFIELD tokens + 布局

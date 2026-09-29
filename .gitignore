@@ -1,0 +1,28 @@
+# Build outputs
+bin/
+obj/
+*.user
+*.suo
+*.swp
+
+# IDE
+.vs/
+.vscode/
+.idea/
+
+# Node / Vue
+node_modules/
+dist/
+*.tsbuildinfo
+.vite/
+
+# Local data
+data/*.db
+data/*.db-wal
+data/*.db-shm
+appsettings.Local.json
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
