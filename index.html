@@ -42,6 +42,81 @@ body{
 /* hazard stripes bar */
 .hazard{height:4px;background:repeating-linear-gradient(-45deg,var(--yellow) 0 10px,#000 10px 20px)}
 
+/* ============ INTERACTIONS ============ */
+/* ---- page switch stagger (panels cascade in) ---- */
+.page:not(.active) .panel{opacity:0;transform:translateY(10px) skewX(-1.5deg);pointer-events:none}
+.page.active .panel{opacity:1;transform:none;transition:opacity .42s cubic-bezier(.2,.7,.2,1), transform .42s cubic-bezier(.2,.7,.2,1), border-color .25s}
+.page.active .panel:nth-child(2){transition-delay:.06s}
+.page.active .panel:nth-child(3){transition-delay:.12s}
+.page.active .panel:nth-child(4){transition-delay:.18s}
+.page.active .panel:nth-child(5){transition-delay:.24s}
+.page.active .panel:nth-child(6){transition-delay:.30s}
+.page.active .panel:nth-child(7){transition-delay:.36s}
+
+/* ---- card hover lift ---- */
+.card{transition:transform .28s cubic-bezier(.2,.7,.2,1), border-color .25s, box-shadow .28s;cursor:pointer}
+.card:hover{transform:translateY(-3px);border-color:rgba(255,230,0,.4);box-shadow:0 8px 22px rgba(0,0,0,.45),0 0 0 1px rgba(255,230,0,.18),0 0 18px rgba(255,230,0,.08)}
+.card:active{transform:translateY(-1px) scale(.99);transition:transform .08s}
+.card.clicked{animation:card-click-flash .5s ease-out}
+@keyframes card-click-flash{
+  0%{box-shadow:0 0 0 rgba(255,230,0,0)}
+  30%{box-shadow:0 0 28px rgba(255,230,0,.5),0 0 0 1px rgba(255,230,0,.4)}
+  100%{box-shadow:0 0 0 rgba(255,230,0,0)}
+}
+
+/* ---- button / chip feedback ---- */
+.btn,.mchip,.top-chips .chip,.search{transition:all .22s ease;cursor:pointer;user-select:none}
+.btn:hover,.mchip:hover{transform:translateY(-1px);border-color:var(--yellow-dim);color:var(--yellow)}
+.btn:active,.mchip:active{transform:translateY(1px) scale(.96);transition:transform .08s}
+.btn.clicked,.mchip.clicked{animation:btn-flash .45s ease-out}
+@keyframes btn-flash{
+  0%{box-shadow:0 0 0 rgba(255,230,0,0);color:inherit}
+  20%{box-shadow:0 0 14px rgba(255,230,0,.6);color:#000;background:var(--yellow)}
+  100%{box-shadow:0 0 0 rgba(255,230,0,0);color:inherit;background:inherit}
+}
+
+/* ---- nav active transition (no perpetual loop) ---- */
+.nav-btn{transition:all .25s ease}
+.nav-btn .nav-dot{position:absolute;right:6px;top:14px;width:6px;height:6px;background:var(--yellow);border-radius:0;transform:scale(0);transition:transform .35s cubic-bezier(.4,1.6,.5,1)}
+.nav-btn.active .nav-dot{transform:scale(1)}
+.nav-btn:hover{color:var(--yellow)}
+.nav-btn:hover:not(.active){background:linear-gradient(90deg,rgba(255,230,0,.06),transparent)}
+
+/* ---- range tab indicator (slide between active buttons) ---- */
+.range-tabs{position:relative;display:inline-flex;gap:0}
+.range-tabs .ind{position:absolute;bottom:0;height:3px;background:var(--yellow);pointer-events:none;transition:all .4s cubic-bezier(.2,.7,.2,1);box-shadow:0 0 10px var(--yellow-glow);left:0;width:0}
+
+/* ---- row hover slide ---- */
+.log-row,.stat-table tbody tr,.side-stat,.summary-row,.th-table tr,.kv tr{position:relative;transition:background .2s ease, transform .22s cubic-bezier(.2,.7,.2,1)}
+.log-row::before,.stat-table tbody tr::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--yellow);transform:scaleY(0);transform-origin:center;transition:transform .25s cubic-bezier(.2,.7,.2,1)}
+.log-row:hover,.stat-table tbody tr:hover{background:rgba(255,230,0,.05);transform:translateX(5px)}
+.log-row:hover::before,.stat-table tbody tr:hover::before{transform:scaleY(1)}
+.log-row .chev,.stat-table tbody tr .chev{position:absolute;right:10px;top:50%;transform:translate(8px,-50%);opacity:0;color:var(--yellow);transition:all .25s}
+.log-row:hover .chev,.stat-table tbody tr:hover .chev{transform:translate(0,-50%);opacity:1}
+
+/* ---- tooltip ---- */
+.chart-tip{position:absolute;background:rgba(0,0,0,.92);border:1px solid var(--yellow);color:var(--yellow);padding:5px 9px;font:11px Consolas,monospace;pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .18s, transform .18s;z-index:5;min-width:96px;letter-spacing:.5px;box-shadow:0 4px 12px rgba(0,0,0,.6),0 0 10px rgba(255,230,0,.25)}
+.chart-tip.show{opacity:1;transform:none}
+.chart-tip .t-row{display:flex;justify-content:space-between;align-items:center;gap:10px;line-height:1.55}
+.chart-tip .t-lbl{font-size:9px;letter-spacing:1.5px}
+.chart-tip .t-val{font-family:Consolas,monospace;font-weight:700;color:var(--yellow)}
+.chart-tip .t-time{font-size:9px;color:var(--txt-dim);letter-spacing:1px;border-bottom:1px dashed var(--line);padding-bottom:3px;margin-bottom:3px;display:flex;justify-content:space-between;gap:10px}
+
+/* ---- count-up entry ---- */
+@keyframes count-pop{
+  0%{opacity:.2;transform:translateY(-8px) scale(.92)}
+  60%{transform:scale(1.06)}
+  100%{opacity:1;transform:none}
+}
+.c-val.pop{animation:count-pop .7s cubic-bezier(.2,.7,.2,1)}
+.c-val.pop small{animation:count-pop .7s cubic-bezier(.2,.7,.2,1)}
+
+/* ---- sparkline hover (extra glow) ---- */
+.card:hover canvas{filter:drop-shadow(0 0 6px rgba(255,230,0,.35))}
+
+/* ---- panel hover border accent ---- */
+.panel:hover{border-color:rgba(255,230,0,.22)}
+
 /* ============ LAYOUT ============ */
 #app{display:grid;grid-template-columns:64px 1fr;grid-template-rows:52px 1fr 30px;height:100vh}
 header{grid-column:1/3;display:flex;align-items:center;gap:14px;padding:0 16px;background:var(--bg2);border-bottom:1px solid var(--line);position:relative}
@@ -241,11 +316,11 @@ footer .right .seg{border-right:none;border-left:1px solid var(--line)}
     <section class="page active" id="page-dash">
       <div class="cards">
         <div class="card"><div class="c-top"><span class="c-name"><span class="tri"></span>CPU 使用率</span><span class="c-tag">CPU</span></div><div class="c-val" id="cv-cpu">12.5<small>%</small></div><div class="c-sub">16 LOGICAL · 2.30GHZ</div><canvas id="sp-cpu"></canvas></div>
-        <div class="card"><div class="c-top"><span class="c-name"><span class="tri"></span>内存占用</span><span class="c-tag">MEMORY</span></div><div class="c-val">46.8<small>%</small></div><div class="c-sub">15.0 GB / 32.0 GB</div><canvas id="sp-mem"></canvas></div>
-        <div class="card"><div class="c-top"><span class="c-name"><span class="tri"></span>GPU 使用率</span><span class="c-tag">GPU</span></div><div class="c-val">31.0<small>%</small></div><div class="c-sub">RTX 3060 · ENGINE SUM</div><canvas id="sp-gpu"></canvas></div>
-        <div class="card"><div class="c-top"><span class="c-name"><span class="tri"></span>显存占用</span><span class="c-tag">VRAM</span></div><div class="c-val">31.8<small>%</small></div><div class="c-sub">3.8 GB / 12.0 GB</div><canvas id="sp-vram"></canvas></div>
-        <div class="card tx"><div class="c-top"><span class="c-name"><span class="tri"></span>上行速率</span><span class="c-tag">TX</span></div><div class="c-val">65.2<small>KB/s</small></div><div class="c-sub">TODAY ↑ 3.7 GB</div><canvas id="sp-tx"></canvas></div>
-        <div class="card tx"><div class="c-top"><span class="c-name"><span class="tri"></span>下行速率</span><span class="c-tag">RX</span></div><div class="c-val">478.4<small>KB/s</small></div><div class="c-sub">TODAY ↓ 41.5 GB</div><canvas id="sp-rx"></canvas></div>
+        <div class="card"><div class="c-top"><span class="c-name"><span class="tri"></span>内存占用</span><span class="c-tag">MEMORY</span></div><div class="c-val" id="cv-mem">46.8<small>%</small></div><div class="c-sub">15.0 GB / 32.0 GB</div><canvas id="sp-mem"></canvas></div>
+        <div class="card"><div class="c-top"><span class="c-name"><span class="tri"></span>GPU 使用率</span><span class="c-tag">GPU</span></div><div class="c-val" id="cv-gpu">31.0<small>%</small></div><div class="c-sub">RTX 3060 · ENGINE SUM</div><canvas id="sp-gpu"></canvas></div>
+        <div class="card"><div class="c-top"><span class="c-name"><span class="tri"></span>显存占用</span><span class="c-tag">VRAM</span></div><div class="c-val" id="cv-vram">31.8<small>%</small></div><div class="c-sub">3.8 GB / 12.0 GB</div><canvas id="sp-vram"></canvas></div>
+        <div class="card tx"><div class="c-top"><span class="c-name"><span class="tri"></span>上行速率</span><span class="c-tag">TX</span></div><div class="c-val" id="cv-tx">65.2<small>KB/s</small></div><div class="c-sub">TODAY ↑ 3.7 GB</div><canvas id="sp-tx"></canvas></div>
+        <div class="card tx"><div class="c-top"><span class="c-name"><span class="tri"></span>下行速率</span><span class="c-tag">RX</span></div><div class="c-val" id="cv-rx">478.4<small>KB/s</small></div><div class="c-sub">TODAY ↓ 41.5 GB</div><canvas id="sp-rx"></canvas></div>
       </div>
 
       <div class="dash-grid">
@@ -403,7 +478,7 @@ footer .right .seg{border-right:none;border-left:1px solid var(--line)}
         <div>
           <div class="panel">
             <div class="p-head"><span class="tri"></span><h2>事件日志</h2><span class="en">EVENT LOG</span>
-              <div class="tools"><span class="badge warn">68 / 68 ENTRIES</span><span class="badge err">● RECORDING</span></div>
+              <div class="tools"><span class="badge warn">68 / 68 ENTRIES</span><span class="badge err badge-rec">● RECORDING</span></div>
             </div>
             <div class="p-body" id="logList" style="padding:0 14px 10px"></div>
             <div class="corner"></div>
@@ -464,6 +539,8 @@ footer .right .seg{border-right:none;border-left:1px solid var(--line)}
    WindowsPanel UI Preview — static fake data, ENDFIELD style
    ============================================================ */
 const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s);
+/* chart hover state (must be declared before first draw) */
+const hoverState={main:null,hist:null,net:null};
 
 /* ---------- clock ---------- */
 function tick(){const d=new Date();$("#clock").textContent=d.toTimeString().slice(0,8);}
@@ -523,9 +600,20 @@ function drawMain(){
   drawLine(ctx,w,h,series(11,n,30,6,10),"#FF9F1C","rgba(255,159,28,.10)");
   drawLine(ctx,w,h,series(22,n,46,3,4),"#FFE600","rgba(255,230,0,.08)");
   drawLine(ctx,w,h,series(33,n,32,8,14),"#3EC6FF","rgba(62,198,255,.08)");
-  // crosshair marker
-  const mx=w*0.83;ctx.strokeStyle="rgba(255,230,0,.5)";ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(mx,0);ctx.lineTo(mx,h);ctx.stroke();ctx.setLineDash([]);
-  ctx.fillStyle="#FFE600";ctx.fillRect(mx-3,10,6,6);
+  // crosshair marker (only when hovering)
+  if(hoverState.main!==null){
+    const mx=Math.max(0,Math.min(w,hoverState.main));
+    ctx.strokeStyle="rgba(255,230,0,.5)";ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(mx,0);ctx.lineTo(mx,h);ctx.stroke();ctx.setLineDash([]);
+    // hover dot at the active value
+    const idx=Math.round(mx/w*(140-1));
+    const arr=[series(11,140,30,6,10),series(22,140,46,3,4),series(33,140,32,8,14)];
+    arr.forEach((d,i)=>{
+      const v=Math.max(0,Math.min(100,d[idx]||0));
+      const yy=h-(v/100)*h;
+      ctx.fillStyle=["#FF9F1C","#FFE600","#3EC6FF"][i];
+      ctx.beginPath();ctx.arc(mx,yy,4,0,Math.PI*2);ctx.fill();
+    });
+  }
   ctx.fillStyle="#8A8A78";ctx.font="9px Consolas,monospace";
   ["100%","75%","50%","25%","0%"].forEach((t,i)=>ctx.fillText(t,4,i*(h-10)/4+8));
 }
@@ -673,6 +761,153 @@ $$(".toolbar .btn, .log-filters .btn").forEach(b=>{
 function drawAll(){drawMain();drawNet();drawGauges();drawHist();}
 drawAll();
 window.addEventListener("resize",drawAll);
+
+/* ============ INTERACTION ANIMATIONS ============ */
+/* range tabs indicator */
+function setupRangeIndicator(){
+  const tb=document.querySelector("#page-hist .toolbar");if(!tb||tb.dataset.ind)return;
+  tb.dataset.ind="1";
+  // Wrap first three buttons in a range-tabs container if not yet
+  const firstThree=[...tb.querySelectorAll(".btn")].slice(0,3);
+  if(firstThree.length<3)return;
+  const wrap=document.createElement("div");wrap.className="range-tabs";
+  firstThree[0].parentNode.insertBefore(wrap,firstThree[0]);
+  firstThree.forEach(b=>wrap.appendChild(b));
+  const ind=document.createElement("div");ind.className="ind";wrap.appendChild(ind);
+  function upd(){
+    const a=wrap.querySelector(".btn.on");
+    if(!a){ind.style.width="0";return;}
+    ind.style.width=a.offsetWidth+"px";
+    ind.style.transform=`translateX(${a.offsetLeft}px)`;
+  }
+  wrap.addEventListener("click",e=>{if(e.target.classList.contains("btn")){setTimeout(upd,10);}});
+  new ResizeObserver(upd).observe(wrap);
+  setTimeout(upd,50);
+}
+
+/* nav indicator dots */
+document.querySelectorAll(".nav-btn").forEach(b=>{
+  const d=document.createElement("span");d.className="nav-dot";b.appendChild(d);
+});
+
+/* click flash utility */
+function flash(el){if(!el)return;el.classList.remove("clicked");void el.offsetWidth;el.classList.add("clicked");setTimeout(()=>el.classList.remove("clicked"),500);}
+
+/* button + chip click feedback */
+document.querySelectorAll(".btn,.mchip").forEach(b=>b.addEventListener("click",()=>flash(b)));
+
+/* card click feedback (dashboard cards) */
+document.querySelectorAll(".card").forEach(c=>c.addEventListener("click",()=>flash(c)));
+
+/* ============ COUNT-UP ON PAGE ENTER ============ */
+const live=[
+  {id:"cv-cpu",v:12.5,mn:6,mx:24,suf:"%"},
+  {id:"cv-mem",v:46.8,mn:42,mx:52,suf:"%"},
+  {id:"cv-gpu",v:31.0,mn:24,mx:48,suf:"%"},
+  {id:"cv-vram",v:31.8,mn:26,mx:40,suf:"%"},
+  {id:"cv-tx",v:65.2,mn:30,mx:140,suf:"KB/s"},
+  {id:"cv-rx",v:478.4,mn:200,mx:850,suf:"KB/s"},
+];
+function fmtVal(n,suf){return n.toFixed(1)+"<small>"+suf+"</small>";}
+function countUp(el,to,dur,suf){
+  const start=performance.now();
+  function step(now){
+    const p=Math.min(1,(now-start)/dur);
+    const eased=1-Math.pow(1-p,3);
+    el.innerHTML=fmtVal(to*eased,suf);
+    if(p<1)requestAnimationFrame(step);
+    else el.innerHTML=fmtVal(to,suf);
+  }
+  requestAnimationFrame(step);
+}
+let firstDashEnter=true;
+function onPageEnter(name){
+  if(name==="dash"){
+    live.forEach(o=>{
+      const el=document.getElementById(o.id);if(!el)return;
+      el.classList.remove("pop");
+      void el.offsetWidth;
+      el.classList.add("pop");
+      if(firstDashEnter){countUp(el,o.v,1000,o.suf);}
+    });
+    firstDashEnter=false;
+  }
+}
+
+/* ============ HOVER CROSSHAIR ON CHARTS ============ */
+function wireChartHover(id){
+  const cv=document.getElementById(id);if(!cv||cv._wired)return;cv._wired=1;
+  // tooltip element
+  const tip=document.createElement("div");tip.className="chart-tip";
+  cv.parentNode.style.position="relative";
+  cv.parentNode.appendChild(tip);
+  cv.addEventListener("mousemove",e=>{
+    const r=cv.getBoundingClientRect();
+    const x=e.clientX-r.left,y=e.clientY-r.top;
+    hoverState[id]=x;
+    // sample the actual curve values at this x position (matches drawMain/drawNet seeds exactly)
+    let html="";
+    if(id==="mainChart"){
+      const n=140;
+      const idx=Math.max(0,Math.min(n-1,Math.round(x/r.width*(n-1))));
+      const cpuV=Math.max(0,Math.min(100,series(11,n,30,6,10)[idx]));
+      const memV=Math.max(0,Math.min(100,series(22,n,46,3,4)[idx]));
+      const gpuV=Math.max(0,Math.min(100,series(33,n,32,8,14)[idx]));
+      // time label: assume 60s window, idx/n spans 0..60s
+      const sec=Math.round(idx/n*60);
+      const tStr=`-${String(60-sec).padStart(2,"0")}s`;
+      html=`<div class="t-time"><span>T</span><span>${tStr}</span></div>
+<div class="t-row"><span class="t-lbl" style="color:#FF9F1C">CPU</span><span class="t-val">${cpuV.toFixed(1)}%</span></div>
+<div class="t-row"><span class="t-lbl" style="color:#FFE600">MEM</span><span class="t-val">${memV.toFixed(1)}%</span></div>
+<div class="t-row"><span class="t-lbl" style="color:#3EC6FF">GPU</span><span class="t-val">${gpuV.toFixed(1)}%</span></div>`;
+    }else if(id==="netChart"){
+      const n=140;
+      const idx=Math.max(0,Math.min(n-1,Math.round(x/r.width*(n-1))));
+      const rxPct=Math.max(0,Math.min(100,series(44,n,30,10,22)[idx]));
+      const txPct=Math.max(0,Math.min(100,series(55,n,10,4,6)[idx]));
+      // map 0-100% to 0-4 MB/s (label range)
+      html=`<div class="t-row"><span class="t-lbl" style="color:#3EC6FF">RX ↓</span><span class="t-val">${(rxPct*0.04).toFixed(2)} MB/s</span></div>
+<div class="t-row"><span class="t-lbl" style="color:#FF9F1C">TX ↑</span><span class="t-val">${(txPct*0.04).toFixed(2)} MB/s</span></div>`;
+    }else if(id==="histChart"){
+      // 200 points across 1 day (00:00 - 23:59)
+      const n=200;
+      const idx=Math.max(0,Math.min(n-1,Math.round(x/r.width*(n-1))));
+      const totalMin=Math.round(idx/(n-1)*1439);
+      const hh=Math.floor(totalMin/60),mm=totalMin%60;
+      const cpuV=Math.max(0,Math.min(100,series(101,n,34,5,8)[idx]));
+      const memV=Math.max(0,Math.min(100,series(102,n,44,3,4)[idx]));
+      const gpuV=Math.max(0,Math.min(100,series(103,n,20,8,16)[idx]));
+      html=`<div class="t-time"><span>时刻</span><span>${String(hh).padStart(2,"0")}:${String(mm).padStart(2,"0")}</span></div>
+<div class="t-row"><span class="t-lbl" style="color:#FF9F1C">CPU</span><span class="t-val">${cpuV.toFixed(1)}%</span></div>
+<div class="t-row"><span class="t-lbl" style="color:#FFE600">MEM</span><span class="t-val">${memV.toFixed(1)}%</span></div>
+<div class="t-row"><span class="t-lbl" style="color:#3EC6FF">GPU</span><span class="t-val">${gpuV.toFixed(1)}%</span></div>`;
+    }
+    tip.innerHTML=html;
+    tip.classList.add("show");
+    // smart positioning: flip to left if overflowing right; place above cursor
+    const tw=tip.offsetWidth,th=tip.offsetHeight;
+    let lx=x+14;
+    if(lx+tw>r.width-4)lx=x-tw-14;
+    let ly=y-th-10;
+    if(ly<0)ly=y+14;
+    tip.style.left=lx+"px";
+    tip.style.top=ly+"px";
+    if(id==="mainChart")drawMain();else if(id==="histChart")drawHist();else if(id==="netChart")drawNet();
+  });
+  cv.addEventListener("mouseleave",()=>{
+    hoverState[id]=null;
+    tip.classList.remove("show");
+    if(id==="mainChart")drawMain();else if(id==="histChart")drawHist();else if(id==="netChart")drawNet();
+  });
+}
+["mainChart","histChart","netChart"].forEach(wireChartHover);
+
+/* ============ PAGE SWITCH HOOK ============ */
+$$(".nav-btn").forEach(b=>b.addEventListener("click",()=>onPageEnter(b.dataset.page)));
+
+/* initial state */
+setupRangeIndicator();
+onPageEnter("dash");
 </script>
 </body>
 </html>
