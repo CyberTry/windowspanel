@@ -299,13 +299,21 @@ Base：`http://127.0.0.1:9720/api/v1`（端口可配）
    - 写入卸载信息，卸载时停止并删除服务
 2. **免安装绿色版**：`install.ps1`（管理员）注册服务；`uninstall.ps1` 反向清理。
 
-### 7.2 发布
+### 7.2 发布（一键打包）
 
 ```powershell
-dotnet publish -c Release -r win-x64 --self-contained true `
-  -p:PublishSingleFile=true -p:PublishTrimmed=true
+# 前置：.NET 8 SDK + Node.js 18+
+powershell -ExecutionPolicy Bypass -File publish.ps1
 ```
-产物约 30–50MB 单 exe（内嵌前端静态资源），目标机 **无需安装 .NET 运行时**。
+
+脚本会自动：安装前端依赖 → 构建 Vue 到 `wwwroot` → `dotnet publish` 单文件自包含 exe → 汇总到 `dist/`。
+
+产物：
+- `dist\WindowsPanel\WindowsPanel.exe`（约 47MB，内嵌前端，目标机**无需安装 .NET 运行时**）
+- `dist\WindowsPanel-win-x64.zip`（可直接分发）
+
+使用方式：双击 `WindowsPanel.exe` 即启动并自动打开浏览器 `http://127.0.0.1:9721`；
+首次运行会在 exe 同目录创建 `data\panel.db` 存储历史数据。
 
 ### 7.3 配置文件 `appsettings.json`
 

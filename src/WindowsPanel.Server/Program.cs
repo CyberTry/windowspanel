@@ -68,4 +68,21 @@ ApiEndpoints.Map(app);
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
+// 双击 exe 运行时自动打开浏览器（作为 Windows 服务运行时不弹窗）
+if (!WindowsServiceHelpers.IsWindowsService() && Environment.UserInteractive)
+{
+    app.Lifetime.ApplicationStarted.Register(() =>
+    {
+        try
+        {
+            using var _ = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = panelOpts.Url,
+                UseShellExecute = true
+            });
+        }
+        catch { /* 忽略打开浏览器失败 */ }
+    });
+}
+
 app.Run();

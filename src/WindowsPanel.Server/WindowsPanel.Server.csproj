@@ -8,6 +8,21 @@
     <AssemblyName>WindowsPanel</AssemblyName>
     <UserSecretsId>windowspanel-dev</UserSecretsId>
     <LangVersion>latest</LangVersion>
+    <Version>1.0.0</Version>
+    <Product>WindowsPanel</Product>
+    <Description>Windows 系统监控面板</Description>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <!-- 单文件发布配置（dotnet publish -c Release 时生效） -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <DebugType>embedded</DebugType>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
